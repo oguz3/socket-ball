@@ -4,6 +4,9 @@ const io = require("socket.io")(http);
 const port = process.env.PORT || 3001;
 
 let usernames = {};
+let mapWidth = 0;
+let mapHeight = 0;
+let apples = [];
 
 app.get("/", (req, res) => {
 	res.sendFile(__dirname + "/");
@@ -18,6 +21,17 @@ function getRandomColor() {
 	return color;
 }
 
+function spawnApple(n) {
+	for (let i = 0; i < n; i++) {
+		apples.push({
+			x: Math.floor(Math.random() * mapWidth),
+			y: Math.floor(Math.random() * mapHeight),
+			size: Math.floor(Math.random() * 9) + 5,
+			color: getRandomColor(),
+		});
+	}
+}
+
 io.on("connection", (socket) => {
 	socket.on("adduser", (username) => {
 		socket.username = username;
@@ -29,20 +43,46 @@ io.on("connection", (socket) => {
 			oldTop: 0,
 			left: 0,
 			top: 0,
+			size: 20,
+			score: 0,
 		};
 		io.emit("adduser", username);
 	});
 
+	socket.on("resize", (width, height) => {
+		mapWidth = width;
+		mapHeight = height;
+		if (apples.length < 120) {
+			spawnApple(120 - apples.length);
+		}
+	});
+
 	socket.on("gameLoop", () => {
 		let newGame = {
-			width: 600,
-			height: 400,
 			heroes: Object.values(usernames),
+			apples: apples,
 		};
 		io.emit("gameLoop", newGame);
 	});
 
 	socket.on("hero_move", (username, x, y) => {
+		apples.forEach((apple, index) => {
+			if (usernames[username] && x !== null && y !== null) {
+				if (
+					x - usernames[username].size < apple.x &&
+					apple.x < x + usernames[username].size &&
+					y - usernames[username].size < apple.y &&
+					apple.y < y + usernames[username].size
+				) {
+					apples.splice(index, 1);
+					usernames[username].size += apple.size / usernames[username].size;
+					usernames[username].score += apple.size;
+					if (apples.length < 120) {
+						spawnApple(1);
+					}
+				}
+			}
+		});
 		let userNewPos = {
 			...usernames[username],
 			oldLeft:

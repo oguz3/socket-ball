@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Socket.IO chat</title>
+		<title>Socket.IO Ball</title>
 		<style>
 			body {
 				margin: 0;
@@ -9,6 +9,7 @@
 					Helvetica, Arial, sans-serif;
 				height: 100%;
 				width: 100%;
+				overflow: hidden;
 				/* display: flex;
 				align-items: center;
 				justify-content: center; */
@@ -62,26 +63,56 @@
 				color: black;
 				display: inline-block;
 			}
+			.score-board {
+				position: absolute;
+				top: 16px;
+				right: 16px;
+			}
+			.score-board ul {
+				list-style: none;
+				padding: 0;
+				margin: 0;
+				border: 1px solid #eaeaea;
+				border-radius: 8px;
+				background: #eaeaea;
+			}
+			.score-board ul li {
+				padding: 8px 16px;
+			}
+			.username {
+				margin-right: 32px;
+			}
 		</style>
 	</head>
 	<body>
 		<form class="username_form" id="add_user_form" action="">
 			<input id="user_input" autocomplete="off" /><button>Join</button>
 		</form>
-
-		<canvas width="600" height="400" id="gameArea" class="gameArea"></canvas>
+		<div class="score-board">
+			<ul id="board"></ul>
+		</div>
+		<canvas id="gameArea" class="gameArea"></canvas>
 		<script src="/socket.io/socket.io.js"></script>
 		<script>
-			//biri login olduğunda isminini icine yazan bir küp ekranda create olsun ve hareket etsin klavyeye göre
 			var socket = io();
 			let my_username = "";
 
-			//var gameArea = document.getElementById("gameArea");
 			var c = document.getElementById("gameArea");
 			var ctx = c.getContext("2d");
 
+			var board = document.getElementById("board");
 			var addUserForm = document.getElementById("add_user_form");
 			var userInput = document.getElementById("user_input");
+
+			window.addEventListener("resize", function () {
+				resizeCanvas();
+			});
+
+			function resizeCanvas() {
+				c.width = window.innerWidth;
+				c.height = window.innerHeight;
+				socket.emit("resize", window.innerWidth, window.innerHeight);
+			}
 
 			addUserForm.addEventListener("submit", function (e) {
 				e.preventDefault();
@@ -89,6 +120,13 @@
 					socket.emit("adduser", userInput.value);
 					my_username = userInput.value;
 					addUserForm.style.display = "none";
+
+					let boardItem = document.createElement("li");
+					boardItem.className = "board-item";
+					boardItem.innerHTML = `<span class="username">${
+						userInput.value
+					}</span> <span class="${userInput.value}-score">${0}</span>`;
+					board.appendChild(boardItem);
 				}
 			});
 
@@ -104,39 +142,33 @@
 
 			window.onload = function () {
 				setInterval(mousemov, 1000 / 60);
+				resizeCanvas();
 			};
 
 			socket.on("gameLoop", (game) => {
-				ctx.clearRect(0, 0, game.width, game.height);
-				game.heroes.forEach((hero) => {
-					ctx.fillStyle = hero.color;
+				ctx.clearRect(0, 0, c.width, c.width);
+				game.apples.forEach((apple) => {
+					ctx.fillStyle = apple.color;
 					ctx.beginPath();
-					ctx.arc(hero.left, hero.top, 20, 0, 2 * Math.PI);
+					ctx.arc(apple.x, apple.y, apple.size, 0, 2 * Math.PI);
 					ctx.fill();
 				});
-			});
+				game?.heroes?.forEach((hero) => {
+					ctx.fillStyle = hero.color;
+					ctx.beginPath();
+					ctx.arc(hero.left, hero.top, hero.size, 0, 2 * Math.PI);
+					ctx.fill();
 
-			socket.on("adduser", (username) => {
-				//ctx.fillText(username, 20, 20);
-				ctx.arc(20, 20, 20, 0, 2 * Math.PI);
+					let score = document.querySelector(`.${hero.name}-score`);
+					if (score) {
+						score.innerText = hero.score;
+					}
+				});
 			});
 
 			socket.on("hero_move", (user) => {
 				socket.emit("gameLoop");
 			});
-
-			// socket.on("hero_move", (user) => {
-			// 	// document.querySelector(`.${user.name}`).style.top = `${user.top - 25}px`;
-			// 	// document.querySelector(`.${user.name}`).style.left = `${user.left - 30}px`;
-			// 	ctx.clearRect(user.oldLeft - 20, user.oldTop - 20, 40, 40);
-			// 	//ctx.fillRect(user.left, user.top, 60, 60);
-			// 	console.log(user);
-			// 	ctx.fillText(user.name, user.left, user.top);
-			// 	ctx.fillStyle = getRandomColor();
-			// 	ctx.beginPath();
-			// 	ctx.arc(user.left, user.top, 20, 0, 2 * Math.PI);
-			// 	ctx.fill();
-			// });
 		</script>
 	</body>
 </html>
