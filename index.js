@@ -9,12 +9,22 @@ app.get("/", (req, res) => {
 	res.sendFile(__dirname + "/");
 });
 
+function getRandomColor() {
+	var letters = "0123456789ABCDEF";
+	var color = "#";
+	for (var i = 0; i < 6; i++) {
+		color += letters[Math.floor(Math.random() * 16)];
+	}
+	return color;
+}
+
 io.on("connection", (socket) => {
 	socket.on("adduser", (username) => {
 		socket.username = username;
 		usernames[username] = {
 			id: socket.id,
 			name: username,
+			color: getRandomColor(),
 			oldLeft: 0,
 			oldTop: 0,
 			left: 0,

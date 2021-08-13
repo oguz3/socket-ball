@@ -83,15 +83,6 @@
 			var addUserForm = document.getElementById("add_user_form");
 			var userInput = document.getElementById("user_input");
 
-			function getRandomColor() {
-				var letters = "0123456789ABCDEF";
-				var color = "#";
-				for (var i = 0; i < 6; i++) {
-					color += letters[Math.floor(Math.random() * 16)];
-				}
-				return color;
-			}
-
 			addUserForm.addEventListener("submit", function (e) {
 				e.preventDefault();
 				if (userInput.value) {
@@ -108,8 +99,7 @@
 			socket.on("gameLoop", (game) => {
 				ctx.clearRect(0, 0, game.width, game.height);
 				game.heroes.forEach((hero) => {
-					console.log(hero);
-					ctx.fillStyle = getRandomColor();
+					ctx.fillStyle = hero.color;
 					ctx.beginPath();
 					ctx.arc(hero.left, hero.top, 20, 0, 2 * Math.PI);
 					ctx.fill();
