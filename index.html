@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Socket.IO chat</title>
+		<style>
+			body {
+				margin: 0;
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+					Helvetica, Arial, sans-serif;
+				height: 100%;
+				width: 100%;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+			.username_form{
+				position: fixed;
+				top: 0;
+				right: 0;
+				bottom: 0;
+				left: 0;
+				background: white;
+				z-index: 2;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+			.username_form input{
+				padding: 8px;
+				border-radius: 6px 0px 0px 6px;
+				border: 1px solid black;
+				outline: none;
+			}
+			.username_form button {
+				padding: 8px 24px;
+				background: black;
+				color: white;
+				border: 1px solid black;
+				border-radius: 0px 6px 6px 0px;
+			}
+			.gameArea{
+				position: relative;
+				width: 100%;
+				height: 100vh;
+				overflow: hidden;
+				cursor: none;
+				/* border: 1px solid black; */
+			}
+			.user_hero{
+				width: 60px;
+				height: 60px;
+				border-radius: 50%;
+				color: #fff;
+				position: absolute;
+				left: 0;
+				bottom: 0;
+				transition: bottom .2s linear;
+			}
+			.user_hero span{
+				position: relative;
+				bottom: 35%;
+				color: black;
+				display: inline-block;
+			}
+		</style>
+	</head>
+	<body>
+		<form class="username_form" id="add_user_form" action="">
+			<input id="user_input" autocomplete="off" /><button>Join</button>
+		</form>
+
+		<div id="gameArea" class="gameArea"></div>
+		<script src="/socket.io/socket.io.js"></script>
+		<script>
+			//biri login olduğunda isminini icine yazan bir küp ekranda create olsun ve hareket etsin klavyeye göre
+			var socket = io();
+			let my_username = "";
+
+			var gameArea = document.getElementById("gameArea");
+			var messages = document.getElementById("messages");
+			var form = document.getElementById("form");
+			var input = document.getElementById("input");
+
+			var addUserForm = document.getElementById("add_user_form");
+			var userInput = document.getElementById("user_input");
+
+			function getRandomColor() {
+				var letters = '0123456789ABCDEF';
+				var color = '#';
+				for (var i = 0; i < 6; i++) {
+					color += letters[Math.floor(Math.random() * 16)];
+				}
+				return color;
+			}
+
+			addUserForm.addEventListener("submit", function (e) {
+				e.preventDefault();
+				if (userInput.value) {
+					socket.emit("adduser", userInput.value);
+					my_username = userInput.value;
+					addUserForm.style.display = 'none';
+				}
+			});
+
+			gameArea.addEventListener('mousemove', (event) => {
+				socket.emit("hero_move", my_username, event.clientX, event.clientY);
+         	});
+
+			socket.on("adduser", (username) => {
+				var item = document.createElement("div");
+				var itemName = document.createElement("span");
+				item.classList.add(`user_hero`);
+				item.classList.add(`${username}`);
+				item.style.backgroundColor = getRandomColor();
+				itemName.textContent = `${username}`;
+				item.appendChild(itemName);
+				gameArea.appendChild(item);
+			});
+
+			socket.on("hero_move", (user) => {
+				document.querySelector(`.${user.name}`).style.top = `${user.top - 25}px`;
+				document.querySelector(`.${user.name}`).style.left = `${user.left - 30}px`;
+			});
+
+		</script>
+	</body>
+</html>
