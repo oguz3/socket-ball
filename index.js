@@ -66,7 +66,6 @@ io.on("connection", (socket) => {
 	});
 
 	socket.on("hero_move", (username, x, y) => {
-		let newSize, newScore;
 		apples.forEach((apple, index) => {
 			if (usernames[username] && x !== null && y !== null) {
 				if (
@@ -76,12 +75,15 @@ io.on("connection", (socket) => {
 					apple.y < y + usernames[username].size
 				) {
 					apples.splice(index, 1);
-					newSize = usernames[username].size + apple.size / usernames[username].size;
-					newScore= usernames[username].score + apple.size;
-				};
-					if (apples.length < 62) {s
-						spawnApple(1);
-					}
+					usernames[username] = {
+						...usernames[username],
+						size:
+							usernames[username].size + apple.size / usernames[username].size,
+						score: usernames[username].score + apple.size,
+					};
+				}
+				if (apples.length < 62) {
+					spawnApple(1);
 				}
 			}
 		});
@@ -97,8 +99,6 @@ io.on("connection", (socket) => {
 					: 0,
 			top: y,
 			left: x,
-			newSize: size,
-			newScore: score,
 		};
 		usernames[username] = userNewPos;
 		io.emit("hero_move", userNewPos);

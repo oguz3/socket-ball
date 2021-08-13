@@ -67,6 +67,7 @@
 				position: absolute;
 				top: 16px;
 				right: 16px;
+				z-index: 99;
 			}
 			.score-board ul {
 				list-style: none;
@@ -153,8 +154,8 @@
 					ctx.arc(apple.x, apple.y, apple.size, 0, 2 * Math.PI);
 					ctx.fill();
 				});
-				game?.heroes?.forEach((hero) => {
-					ctx.fillStyle = hero.color;
+				game.heroes.forEach((hero) => {
+					ctx.fillStyle = "red";
 					ctx.beginPath();
 					ctx.arc(hero.left, hero.top, hero.size, 0, 2 * Math.PI);
 					ctx.fill();
