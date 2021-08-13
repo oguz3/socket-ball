@@ -9,11 +9,11 @@
 					Helvetica, Arial, sans-serif;
 				height: 100%;
 				width: 100%;
-				display: flex;
+				/* display: flex;
 				align-items: center;
-				justify-content: center;
+				justify-content: center; */
 			}
-			.username_form{
+			.username_form {
 				position: fixed;
 				top: 0;
 				right: 0;
@@ -25,7 +25,7 @@
 				align-items: center;
 				justify-content: center;
 			}
-			.username_form input{
+			.username_form input {
 				padding: 8px;
 				border-radius: 6px 0px 0px 6px;
 				border: 1px solid black;
@@ -38,15 +38,15 @@
 				border: 1px solid black;
 				border-radius: 0px 6px 6px 0px;
 			}
-			.gameArea{
+			.gameArea {
 				position: relative;
-				width: 100%;
-				height: 100vh;
+				/* width: 100%;
+				height: 100vh; */
 				overflow: hidden;
-				cursor: none;
+				/* cursor: none; */
 				/* border: 1px solid black; */
 			}
-			.user_hero{
+			.user_hero {
 				width: 60px;
 				height: 60px;
 				border-radius: 50%;
@@ -54,9 +54,9 @@
 				position: absolute;
 				left: 0;
 				bottom: 0;
-				transition: bottom .2s linear;
+				transition: bottom 0.2s linear;
 			}
-			.user_hero span{
+			.user_hero span {
 				position: relative;
 				bottom: 35%;
 				color: black;
@@ -69,24 +69,23 @@
 			<input id="user_input" autocomplete="off" /><button>Join</button>
 		</form>
 
-		<div id="gameArea" class="gameArea"></div>
+		<canvas width="600" height="400" id="gameArea" class="gameArea"></canvas>
 		<script src="/socket.io/socket.io.js"></script>
 		<script>
 			//biri login olduğunda isminini icine yazan bir küp ekranda create olsun ve hareket etsin klavyeye göre
 			var socket = io();
 			let my_username = "";
 
-			var gameArea = document.getElementById("gameArea");
-			var messages = document.getElementById("messages");
-			var form = document.getElementById("form");
-			var input = document.getElementById("input");
+			//var gameArea = document.getElementById("gameArea");
+			var c = document.getElementById("gameArea");
+			var ctx = c.getContext("2d");
 
 			var addUserForm = document.getElementById("add_user_form");
 			var userInput = document.getElementById("user_input");
 
 			function getRandomColor() {
-				var letters = '0123456789ABCDEF';
-				var color = '#';
+				var letters = "0123456789ABCDEF";
+				var color = "#";
 				for (var i = 0; i < 6; i++) {
 					color += letters[Math.floor(Math.random() * 16)];
 				}
@@ -98,30 +97,46 @@
 				if (userInput.value) {
 					socket.emit("adduser", userInput.value);
 					my_username = userInput.value;
-					addUserForm.style.display = 'none';
+					addUserForm.style.display = "none";
 				}
 			});
 
-			gameArea.addEventListener('mousemove', (event) => {
+			gameArea.addEventListener("mousemove", (event) => {
 				socket.emit("hero_move", my_username, event.clientX, event.clientY);
-         	});
+			});
+
+			socket.on("gameLoop", (game) => {
+				ctx.clearRect(0, 0, game.width, game.height);
+				game.heroes.forEach((hero) => {
+					console.log(hero);
+					ctx.fillStyle = getRandomColor();
+					ctx.beginPath();
+					ctx.arc(hero.left, hero.top, 20, 0, 2 * Math.PI);
+					ctx.fill();
+				});
+			});
 
 			socket.on("adduser", (username) => {
-				var item = document.createElement("div");
-				var itemName = document.createElement("span");
-				item.classList.add(`user_hero`);
-				item.classList.add(`${username}`);
-				item.style.backgroundColor = getRandomColor();
-				itemName.textContent = `${username}`;
-				item.appendChild(itemName);
-				gameArea.appendChild(item);
+				//ctx.fillText(username, 20, 20);
+				ctx.arc(20, 20, 20, 0, 2 * Math.PI);
 			});
 
 			socket.on("hero_move", (user) => {
-				document.querySelector(`.${user.name}`).style.top = `${user.top - 25}px`;
-				document.querySelector(`.${user.name}`).style.left = `${user.left - 30}px`;
+				socket.emit("gameLoop");
 			});
 
+			// socket.on("hero_move", (user) => {
+			// 	// document.querySelector(`.${user.name}`).style.top = `${user.top - 25}px`;
+			// 	// document.querySelector(`.${user.name}`).style.left = `${user.left - 30}px`;
+			// 	ctx.clearRect(user.oldLeft - 20, user.oldTop - 20, 40, 40);
+			// 	//ctx.fillRect(user.left, user.top, 60, 60);
+			// 	console.log(user);
+			// 	ctx.fillText(user.name, user.left, user.top);
+			// 	ctx.fillStyle = getRandomColor();
+			// 	ctx.beginPath();
+			// 	ctx.arc(user.left, user.top, 20, 0, 2 * Math.PI);
+			// 	ctx.fill();
+			// });
 		</script>
 	</body>
 </html>
