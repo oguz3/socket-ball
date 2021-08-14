@@ -12,10 +12,6 @@ app.get("/", (req, res) => {
 	res.sendFile(__dirname + "/");
 });
 
-app.get("/test", (req, res) => {
-	res.sendFile(__dirname + "/test/");
-});
-
 function getRandomColor() {
 	var letters = "0123456789ABCDEF";
 	var color = "#";
@@ -56,41 +52,9 @@ io.on("connection", (socket) => {
 	socket.on("resize", (width, height) => {
 		mapWidth = width;
 		mapHeight = height;
-		if (apples.length < 62) {
-			spawnApple(62 - apples.length);
-		}
 	});
 
-	// socket.on("gameLoop", () => {
-	// 	let newGame = {
-	// 		heroes: Object.values(usernames),
-	// 		apples: apples,
-	// 	};
-	// 	io.emit("gameLoop", newGame);
-	// });
-
 	socket.on("hero_move", (username, x, y) => {
-		apples.forEach((apple, index) => {
-			if (usernames[username] && x !== null && y !== null) {
-				if (
-					x - usernames[username].size < apple.x &&
-					apple.x < x + usernames[username].size &&
-					y - usernames[username].size < apple.y &&
-					apple.y < y + usernames[username].size
-				) {
-					apples.splice(index, 1);
-					usernames[username] = {
-						...usernames[username],
-						size:
-							usernames[username].size + apple.size / usernames[username].size,
-						score: usernames[username].score + apple.size,
-					};
-				}
-				if (apples.length < 62) {
-					spawnApple(1);
-				}
-			}
-		});
 		let userNewPos = {
 			...usernames[username],
 			oldLeft:
@@ -117,11 +81,10 @@ io.on("connection", (socket) => {
 
 setInterval(() => {
 	let newGame = {
-		heroes: Object.values(usernames),
-		apples: apples,
+		heroes: Object.values(usernames)
 	};
 	io.emit("gameLoop", newGame);
-}, 1000 / 60);
+}, 33);
 
 http.listen(port, () => {
 	console.log(`Socket.IO server running at http://localhost:${port}/`);

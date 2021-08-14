@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Socket.IO Ball</title>
+		<style>
+			body {
+				margin: 0;
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+					Helvetica, Arial, sans-serif;
+				height: 100%;
+				width: 100%;
+				overflow: hidden;
+				/* display: flex;
+				align-items: center;
+				justify-content: center; */
+			}
+			.username_form {
+				position: fixed;
+				top: 0;
+				right: 0;
+				bottom: 0;
+				left: 0;
+				background: white;
+				z-index: 2;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+			.username_form input {
+				padding: 8px;
+				border-radius: 6px 0px 0px 6px;
+				border: 1px solid black;
+				outline: none;
+			}
+			.username_form button {
+				padding: 8px 24px;
+				background: black;
+				color: white;
+				border: 1px solid black;
+				border-radius: 0px 6px 6px 0px;
+			}
+			.gameArea {
+				position: relative;
+				/* width: 100%;
+				height: 100vh; */
+				overflow: hidden;
+				/* cursor: none; */
+				/* border: 1px solid black; */
+			}
+			.user_hero {
+				width: 60px;
+				height: 60px;
+				border-radius: 50%;
+				color: #fff;
+				position: absolute;
+				left: 0;
+				bottom: 0;
+				transition: bottom 0.2s linear;
+			}
+			.user_hero span {
+				position: relative;
+				bottom: 35%;
+				color: black;
+				display: inline-block;
+			}
+			.score-board {
+				position: absolute;
+				top: 16px;
+				right: 16px;
+				z-index: 99;
+			}
+			.score-board ul {
+				list-style: none;
+				padding: 0;
+				margin: 0;
+				border: 1px solid #eaeaea;
+				border-radius: 8px;
+				background: #eaeaea;
+			}
+			.score-board ul li {
+				padding: 8px 16px;
+			}
+			.username {
+				margin-right: 32px;
+			}
+		</style>
+	</head>
+	<body>
+		<form class="username_form" id="add_user_form" action="">
+			<input id="user_input" autocomplete="off" /><button>Join</button>
+		</form>
+		<div class="score-board">
+			<ul id="board"></ul>
+		</div>
+		<canvas id="gameArea" class="gameArea"></canvas>
+		<script src="/socket.io/socket.io.js"></script>
+		<script>
+			var socket = io();
+			let my_username = "";
+
+			var c = document.getElementById("gameArea");
+			var ctx = c.getContext("2d");
+
+			var board = document.getElementById("board");
+			var addUserForm = document.getElementById("add_user_form");
+			var userInput = document.getElementById("user_input");
+
+			window.addEventListener("resize", function () {
+				resizeCanvas();
+			});
+
+			function resizeCanvas() {
+				c.width = window.innerWidth;
+				c.height = window.innerHeight;
+				socket.emit("resize", window.innerWidth, window.innerHeight);
+			}
+
+			addUserForm.addEventListener("submit", function (e) {
+				e.preventDefault();
+				if (userInput.value) {
+					socket.emit("adduser", userInput.value);
+					my_username = userInput.value;
+					addUserForm.style.display = "none";
+
+					let boardItem = document.createElement("li");
+					boardItem.className = "board-item";
+					boardItem.innerHTML = `<span class="username">${
+						userInput.value
+					}</span> <span class="${userInput.value}-score">${0}</span>`;
+					board.appendChild(boardItem);
+				}
+			});
+
+			// gameArea.onmousemove = function (e) {
+			// 	var event = e || window.event;
+			// 	window.mouseX = event.clientX;
+			// 	window.mouseY = event.clientY;
+			// 	mousemov();
+			// };
+
+			function mousemov(event) {
+				socket.emit("hero_move", my_username, event.clientX, event.clientY);
+			}
+
+			gameArea.addEventListener("mousedown", function (e) {
+				this.addEventListener("mousemove", mousemov);
+			});
+
+			gameArea.addEventListener("mouseup", function (e) {
+				this.removeEventListener("mousemove", mousemov);
+			});
+
+			window.onload = function () {
+				resizeCanvas();
+			};
+
+			socket.on("gameLoop", (game) => {
+				ctx.clearRect(0, 0, c.width, c.width);
+				game.heroes.forEach((hero) => {
+					ctx.fillStyle = "red";
+					ctx.beginPath();
+					ctx.arc(hero.left, hero.top, hero.size, 0, 2 * Math.PI);
+					ctx.fill();
+				});
+			});
+
+			socket.on("hero_move", () => {
+				socket.emit("gameLoop");
+			});
+		</script>
+	</body>
+</html>
