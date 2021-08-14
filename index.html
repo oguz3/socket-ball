@@ -135,6 +135,7 @@
 				var event = e || window.event;
 				window.mouseX = event.clientX;
 				window.mouseY = event.clientY;
+				mousemov();
 			};
 
 			function mousemov() {
@@ -142,7 +143,7 @@
 			}
 
 			window.onload = function () {
-				setInterval(mousemov, 1000 / 24);
+				//setInterval(mousemov, 1000 / 24);
 				resizeCanvas();
 			};
 
@@ -167,9 +168,9 @@
 				});
 			});
 
-			socket.on("hero_move", (user) => {
-				socket.emit("gameLoop");
-			});
+			// socket.on("hero_move", (user) => {
+			// 	socket.emit("gameLoop");
+			// });
 		</script>
 	</body>
 </html>

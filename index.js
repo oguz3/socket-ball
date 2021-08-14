@@ -57,13 +57,13 @@ io.on("connection", (socket) => {
 		}
 	});
 
-	socket.on("gameLoop", () => {
-		let newGame = {
-			heroes: Object.values(usernames),
-			apples: apples,
-		};
-		io.emit("gameLoop", newGame);
-	});
+	// socket.on("gameLoop", () => {
+	// 	let newGame = {
+	// 		heroes: Object.values(usernames),
+	// 		apples: apples,
+	// 	};
+	// 	io.emit("gameLoop", newGame);
+	// });
 
 	socket.on("hero_move", (username, x, y) => {
 		apples.forEach((apple, index) => {
@@ -110,6 +110,14 @@ io.on("connection", (socket) => {
 		});
 	});
 });
+
+setInterval(() => {
+	let newGame = {
+		heroes: Object.values(usernames),
+		apples: apples,
+	};
+	io.emit("gameLoop", newGame);
+}, 1000 / 60);
 
 http.listen(port, () => {
 	console.log(`Socket.IO server running at http://localhost:${port}/`);
